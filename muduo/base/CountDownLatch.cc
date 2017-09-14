@@ -13,16 +13,18 @@ CountDownLatch::CountDownLatch(int count)
     count_(count)
 {
 }
-
+//经典的条件变量用法
 void CountDownLatch::wait()
 {
+	//已经封装在了类里面，出了作用域就会解锁
   MutexLockGuard lock(mutex_);
+  
   while (count_ > 0)
   {
     condition_.wait();
   }
 }
-
+//计数器递减
 void CountDownLatch::countDown()
 {
   MutexLockGuard lock(mutex_);

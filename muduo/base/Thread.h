@@ -44,13 +44,15 @@ class Thread : boost::noncopyable
 
   bool       started_;
   bool       joined_;
+  //线程id
   pthread_t  pthreadId_;
   pid_t      tid_;
+  //线程的运行函数
   ThreadFunc func_;
-  string     name_;
-  CountDownLatch latch_;
+  string     name_;//线程名字
+  CountDownLatch latch_;//用于同步
 
-  static AtomicInt32 numCreated_;
+  static AtomicInt32 numCreated_;//已经创建的数目
 };
 
 }

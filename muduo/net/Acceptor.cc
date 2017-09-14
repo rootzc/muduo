@@ -35,6 +35,7 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool reusepor
   acceptSocket_.setReuseAddr(true);
   acceptSocket_.setReusePort(reuseport);
   acceptSocket_.bindAddress(listenAddr);
+  //设置了listensocket的读事件
   acceptChannel_.setReadCallback(
       boost::bind(&Acceptor::handleRead, this));
 }
@@ -51,19 +52,27 @@ void Acceptor::listen()
   loop_->assertInLoopThread();
   listenning_ = true;
   acceptSocket_.listen();
-  acceptChannel_.enableReading();
+  //这里设置socket的读事件：读事件调用
+  // //读写关闭，错误的回调函数
+  //ReadEventCallback readCallback_;
+  //EventCallback writeCallback_;
+  //EventCallback closeCallback_;
+  //EventCallback errorCallback_;
+  acceptChannel_.enableReading();// add the listenfd's read event
 }
-
+//这里就是epoll的回调函数会进行读事件：新连接的处理
 void Acceptor::handleRead()
 {
   loop_->assertInLoopThread();
   InetAddress peerAddr;
   //FIXME loop until no more
+  //接受连接
   int connfd = acceptSocket_.accept(&peerAddr);
   if (connfd >= 0)
   {
     // string hostport = peerAddr.toIpPort();
     // LOG_TRACE << "Accepts of " << hostport;
+    //之前在main中设置的新连接到来后的回调函数
     if (newConnectionCallback_)
     {
       newConnectionCallback_(connfd, peerAddr);

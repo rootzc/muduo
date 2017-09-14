@@ -15,12 +15,12 @@
 using namespace muduo;
 using namespace muduo::net;
 
-
+//构造函数 设置线程的运行函数
 EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,
                                  const string& name)
   : loop_(NULL),
     exiting_(false),
-    thread_(boost::bind(&EventLoopThread::threadFunc, this), name),
+    thread_(boost::bind(&EventLoopThread::threadFunc, this), name),//设置线程函数
     mutex_(),
     cond_(mutex_),
     callback_(cb)
@@ -38,9 +38,10 @@ EventLoopThread::~EventLoopThread()
     thread_.join();
   }
 }
-
+//创建并运行一个线程的函数
 EventLoop* EventLoopThread::startLoop()
 {
+	//还是运行线程函数
   assert(!thread_.started());
   thread_.start();
 
@@ -54,11 +55,13 @@ EventLoop* EventLoopThread::startLoop()
 
   return loop_;
 }
-
+//
 void EventLoopThread::threadFunc()
 {
+	
   EventLoop loop;
 
+  //调用回调函数，用来初始化一个线程
   if (callback_)
   {
     callback_(&loop);

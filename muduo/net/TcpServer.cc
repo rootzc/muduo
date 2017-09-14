@@ -21,19 +21,27 @@
 using namespace muduo;
 using namespace muduo::net;
 
-TcpServer::TcpServer(EventLoop* loop,
+//构造函数：这里还是有很多的东东，
+TcpServer::
+TcpServer(EventLoop* loop,
                      const InetAddress& listenAddr,
                      const string& nameArg,
                      Option option)
   : loop_(CHECK_NOTNULL(loop)),
     ipPort_(listenAddr.toIpPort()),
     name_(nameArg),
+    //第一个重头戏：新建acceptor：新建channel并设置对应的读事件函数
     acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),
+    //新建线程池结构
     threadPool_(new EventLoopThreadPool(loop, name_)),
+    //这里先设置新连接的回调函数
     connectionCallback_(defaultConnectionCallback),
     messageCallback_(defaultMessageCallback),
     nextConnId_(1)
 {
+  //这里会设置新连接的accept后调用的回调函数，厉害了newconnection中会
+  //1.创建conn
+  //2.设置对应的
   acceptor_->setNewConnectionCallback(
       boost::bind(&TcpServer::newConnection, this, _1, _2));
 }
@@ -59,18 +67,21 @@ void TcpServer::setThreadNum(int numThreads)
   threadPool_->setThreadNum(numThreads);
 }
 
+//服务器开始运行
 void TcpServer::start()
 {
   if (started_.getAndSet(1) == 0)
   {
+	  //开始运行线程池
     threadPool_->start(threadInitCallback_);
 
     assert(!acceptor_->listenning());
+	//厉害了，这里用了boost的bind其中一种用法，将成员对象与其成员方法绑定
     loop_->runInLoop(
         boost::bind(&Acceptor::listen, get_pointer(acceptor_)));
   }
 }
-
+//
 void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 {
   loop_->assertInLoopThread();
@@ -92,6 +103,8 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           localAddr,
                                           peerAddr));
   connections_[connName] = conn;
+  //设置各种回调函数
+  //这里重新设置连接函数
   conn->setConnectionCallback(connectionCallback_);
   conn->setMessageCallback(messageCallback_);
   conn->setWriteCompleteCallback(writeCompleteCallback_);

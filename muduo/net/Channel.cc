@@ -62,7 +62,7 @@ void Channel::remove()
   addedToLoop_ = false;
   loop_->removeChannel(this);
 }
-
+//事件的处理入口
 void Channel::handleEvent(Timestamp receiveTime)
 {
   boost::shared_ptr<void> guard;
@@ -102,6 +102,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
   {
     if (errorCallback_) errorCallback_();
   }
+  //读写函数
   if (revents_ & (POLLIN | POLLPRI | POLLRDHUP))
   {
     if (readCallback_) readCallback_(receiveTime);

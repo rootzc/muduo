@@ -39,28 +39,34 @@ class Poller : boost::noncopyable
 
   /// Polls the I/O events.
   /// Must be called in the loop thread.
+  //epoll_wait
   virtual Timestamp poll(int timeoutMs, ChannelList* activeChannels) = 0;
 
   /// Changes the interested I/O events.
   /// Must be called in the loop thread.
+  //更新事件
   virtual void updateChannel(Channel* channel) = 0;
 
   /// Remove the channel, when it destructs.
   /// Must be called in the loop thread.
+  //从事件集合中移除事件
   virtual void removeChannel(Channel* channel) = 0;
 
+  //是否被监听
   virtual bool hasChannel(Channel* channel) const;
 
+  //新建一个poller
   static Poller* newDefaultPoller(EventLoop* loop);
 
+  
   void assertInLoopThread() const
   {
     ownerLoop_->assertInLoopThread();
   }
 
  protected:
-  typedef std::map<int, Channel*> ChannelMap;
-  ChannelMap channels_;
+  typedef std::map<int, Channel*> ChannelMap;//存储事件
+  ChannelMap channels_;//事件集合
 
  private:
   EventLoop* ownerLoop_;

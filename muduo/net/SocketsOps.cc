@@ -102,7 +102,7 @@ void sockets::bindOrDie(int sockfd, const struct sockaddr* addr)
     LOG_SYSFATAL << "sockets::bindOrDie";
   }
 }
-
+//
 void sockets::listenOrDie(int sockfd)
 {
   int ret = ::listen(sockfd, SOMAXCONN);

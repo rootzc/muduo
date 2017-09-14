@@ -26,12 +26,14 @@ using namespace muduo::net;
 
 namespace
 {
+//线程局部存储
 __thread EventLoop* t_loopInThisThread = 0;
 
 const int kPollTimeMs = 10000;
-
+//创建一个事件
 int createEventfd()
 {
+	//创建一个事件对象
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (evtfd < 0)
   {
@@ -56,6 +58,7 @@ class IgnoreSigPipe
 IgnoreSigPipe initObj;
 }
 
+//返回当前的线程局部存储的数据
 EventLoop* EventLoop::getEventLoopOfCurrentThread()
 {
   return t_loopInThisThread;
@@ -67,11 +70,11 @@ EventLoop::EventLoop()
     eventHandling_(false),
     callingPendingFunctors_(false),
     iteration_(0),
-    threadId_(CurrentThread::tid()),
-    poller_(Poller::newDefaultPoller(this)),
+    threadId_(CurrentThread::tid()),//得到当前线程id
+    poller_(Poller::newDefaultPoller(this)),//创建epoller
     timerQueue_(new TimerQueue(this)),
-    wakeupFd_(createEventfd()),
-    wakeupChannel_(new Channel(this, wakeupFd_)),
+    wakeupFd_(createEventfd()),//创建事件对象
+    wakeupChannel_(new Channel(this, wakeupFd_)),//新建一个事件
     currentActiveChannel_(NULL)
 {
   LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
@@ -84,9 +87,11 @@ EventLoop::EventLoop()
   {
     t_loopInThisThread = this;
   }
+  //设置被唤醒事件的读回调函数：eventloop::读回调
   wakeupChannel_->setReadCallback(
       boost::bind(&EventLoop::handleRead, this));
   // we are always reading the wakeupfd
+  //设置事件的读标志
   wakeupChannel_->enableReading();
 }
 
@@ -107,10 +112,11 @@ void EventLoop::loop()
   looping_ = true;
   quit_ = false;  // FIXME: what if someone calls quit() before loop() ?
   LOG_TRACE << "EventLoop " << this << " start looping";
-
+	//循环epoll
   while (!quit_)
   {
     activeChannels_.clear();
+	//这里就是调用了一次epoll_wait,并且把触发的事件放入到对应的数据中
     pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
     ++iteration_;
     if (Logger::logLevel() <= Logger::TRACE)
@@ -118,15 +124,20 @@ void EventLoop::loop()
       printActiveChannels();
     }
     // TODO sort channel by priority
+	//处理事件
+	//设置事件处理中的标志
     eventHandling_ = true;
     for (ChannelList::iterator it = activeChannels_.begin();
         it != activeChannels_.end(); ++it)
     {
       currentActiveChannel_ = *it;
+	  
+	  //此处会进行事件的读写处理
       currentActiveChannel_->handleEvent(pollReturnTime_);
     }
     currentActiveChannel_ = NULL;
     eventHandling_ = false;
+	//处理仿函数队列中的函数们
     doPendingFunctors();
   }
 
@@ -145,7 +156,7 @@ void EventLoop::quit()
     wakeup();
   }
 }
-
+//
 void EventLoop::runInLoop(const Functor& cb)
 {
   if (isInLoopThread())
@@ -157,7 +168,7 @@ void EventLoop::runInLoop(const Functor& cb)
     queueInLoop(cb);
   }
 }
-
+//
 void EventLoop::queueInLoop(const Functor& cb)
 {
   {
@@ -244,13 +255,15 @@ void EventLoop::cancel(TimerId timerId)
   return timerQueue_->cancel(timerId);
 }
 
+//设置一个事件的读写属性
 void EventLoop::updateChannel(Channel* channel)
 {
+    //there is the most important
   assert(channel->ownerLoop() == this);
   assertInLoopThread();
   poller_->updateChannel(channel);
 }
-
+//移除一个事件
 void EventLoop::removeChannel(Channel* channel)
 {
   assert(channel->ownerLoop() == this);
@@ -263,6 +276,7 @@ void EventLoop::removeChannel(Channel* channel)
   poller_->removeChannel(channel);
 }
 
+//
 bool EventLoop::hasChannel(Channel* channel)
 {
   assert(channel->ownerLoop() == this);
@@ -277,6 +291,7 @@ void EventLoop::abortNotInLoopThread()
             << ", current thread id = " <<  CurrentThread::tid();
 }
 
+//就是向创建的事件对象发送数据导致对象被唤醒
 void EventLoop::wakeup()
 {
   uint64_t one = 1;
@@ -286,7 +301,7 @@ void EventLoop::wakeup()
     LOG_ERROR << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
   }
 }
-
+//处理读操作
 void EventLoop::handleRead()
 {
   uint64_t one = 1;
@@ -296,17 +311,19 @@ void EventLoop::handleRead()
     LOG_ERROR << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
   }
 }
-
+//
 void EventLoop::doPendingFunctors()
 {
   std::vector<Functor> functors;
+  //正在处理事件处理完成后的善后操作
   callingPendingFunctors_ = true;
 
   {
   MutexLockGuard lock(mutex_);
   functors.swap(pendingFunctors_);
   }
-
+	
+  //依次调用队列中的仿函数
   for (size_t i = 0; i < functors.size(); ++i)
   {
     functors[i]();

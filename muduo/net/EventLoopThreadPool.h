@@ -26,7 +26,7 @@ namespace net
 
 class EventLoop;
 class EventLoopThread;
-
+//事件处理线程池
 class EventLoopThreadPool : boost::noncopyable
 {
  public:
@@ -35,11 +35,12 @@ class EventLoopThreadPool : boost::noncopyable
   EventLoopThreadPool(EventLoop* baseLoop, const string& nameArg);
   ~EventLoopThreadPool();
   void setThreadNum(int numThreads) { numThreads_ = numThreads; }
+  //创建线程池，压入每一个线程的入口函数
   void start(const ThreadInitCallback& cb = ThreadInitCallback());
 
   // valid after calling start()
   /// round-robin
-  EventLoop* getNextLoop();
+  EventLoop* getNextLoop();	
 
   /// with the same hash code, it will always return the same EventLoop
   EventLoop* getLoopForHash(size_t hashCode);
@@ -53,13 +54,19 @@ class EventLoopThreadPool : boost::noncopyable
   { return name_; }
 
  private:
-
+	//事件处理器
   EventLoop* baseLoop_;
+  //线程池名字
   string name_;
+  //是否开始
   bool started_;
+  //线程数目
   int numThreads_;
+  //下一个线程id
   int next_;
+  //线程池
   boost::ptr_vector<EventLoopThread> threads_;
+  //线程的运行函数
   std::vector<EventLoop*> loops_;
 };
 

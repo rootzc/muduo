@@ -78,7 +78,7 @@ struct ThreadData
       tid_(tid),
       latch_(latch)
   { }
-
+//线程的运行函数
   void runInThread()
   {
     *tid_ = muduo::CurrentThread::tid();
@@ -86,11 +86,12 @@ struct ThreadData
     latch_->countDown();
     latch_ = NULL;
 
+	//线程局部存储设置
     muduo::CurrentThread::t_threadName = name_.empty() ? "muduoThread" : name_.c_str();
     ::prctl(PR_SET_NAME, muduo::CurrentThread::t_threadName);
     try
     {
-      func_();
+      func_();//调用ThreadData里面的func_
       muduo::CurrentThread::t_threadName = "finished";
     }
     catch (const Exception& ex)
@@ -116,10 +117,11 @@ struct ThreadData
     }
   }
 };
-
+//线程的运行函数
 void* startThread(void* obj)
 {
   ThreadData* data = static_cast<ThreadData*>(obj);
+  //调用ThreadData中的runinthread
   data->runInThread();
   delete data;
   return NULL;
@@ -200,6 +202,8 @@ void Thread::setDefaultName()
   }
 }
 
+
+
 void Thread::start()
 {
   assert(!started_);
@@ -218,6 +222,8 @@ void Thread::start()
     assert(tid_ > 0);
   }
 }
+
+
 
 int Thread::join()
 {

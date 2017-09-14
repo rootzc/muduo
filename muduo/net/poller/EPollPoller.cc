@@ -37,7 +37,7 @@ const int kNew = -1;
 const int kAdded = 1;
 const int kDeleted = 2;
 }
-
+//构造函数中创建epollfd
 EPollPoller::EPollPoller(EventLoop* loop)
   : Poller(loop),
     epollfd_(::epoll_create1(EPOLL_CLOEXEC)),
@@ -48,12 +48,12 @@ EPollPoller::EPollPoller(EventLoop* loop)
     LOG_SYSFATAL << "EPollPoller::EPollPoller";
   }
 }
-
+//析构函数中关闭
 EPollPoller::~EPollPoller()
 {
   ::close(epollfd_);
 }
-
+//调用一次epoll_wait，将已经触发的结果装载到channels
 Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
 {
   LOG_TRACE << "fd total count " << channels_.size();
@@ -87,7 +87,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   }
   return now;
 }
-
+//从epoll::event.data.ptr中取出要搞定的 事件封装
 void EPollPoller::fillActiveChannels(int numEvents,
                                      ChannelList* activeChannels) const
 {
@@ -95,8 +95,8 @@ void EPollPoller::fillActiveChannels(int numEvents,
   for (int i = 0; i < numEvents; ++i)
   {
     Channel* channel = static_cast<Channel*>(events_[i].data.ptr);
-#ifndef NDEBUG
-    int fd = channel->fd();
+#ifndef NDEBUG 
+    int fd = channel->fd();//检查该fd是不是被监听的fd
     ChannelMap::const_iterator it = channels_.find(fd);
     assert(it != channels_.end());
     assert(it->second == channel);

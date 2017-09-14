@@ -190,7 +190,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     }
   }
 }
-
+//关闭，就是添加关闭的函数到延迟执行的函数队列中
 void TcpConnection::shutdown()
 {
   // FIXME: use compare and swap

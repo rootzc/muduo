@@ -100,12 +100,18 @@ class TcpServer : boost::noncopyable
   /// Not thread safe, but in loop
   void removeConnectionInLoop(const TcpConnectionPtr& conn);
 
+  //锟斤拷锟接伙拷锟斤拷
   typedef std::map<string, TcpConnectionPtr> ConnectionMap;
 
+  //锟铰硷拷锟斤拷锟斤拷锟斤拷
   EventLoop* loop_;  // the acceptor loop
+  //ip port
   const string ipPort_;
+  //name
   const string name_;
+  //锟斤拷锟接斤拷锟斤拷锟斤拷
   boost::scoped_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
+  //锟竭程筹拷
   boost::shared_ptr<EventLoopThreadPool> threadPool_;
   ConnectionCallback connectionCallback_;
   MessageCallback messageCallback_;

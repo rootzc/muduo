@@ -36,17 +36,21 @@ class EPollPoller : public Poller
   virtual void removeChannel(Channel* channel);
 
  private:
+	 //事件监听队列长度
   static const int kInitEventListSize = 16;
-
+	//
   static const char* operationToString(int op);
-
+	//触发事件后，用已触发事件填充channels
   void fillActiveChannels(int numEvents,
                           ChannelList* activeChannels) const;
+  //更新事件
   void update(int operation, Channel* channel);
 
   typedef std::vector<struct epoll_event> EventList;
 
+  //epfd
   int epollfd_;
+  //事件集合
   EventList events_;
 };
 

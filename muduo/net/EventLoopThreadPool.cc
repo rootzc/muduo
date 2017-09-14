@@ -20,7 +20,7 @@ using namespace muduo::net;
 
 
 EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop, const string& nameArg)
-  : baseLoop_(baseLoop),
+  : baseLoop_(baseLoop),//事件
     name_(nameArg),
     started_(false),
     numThreads_(0),
@@ -32,7 +32,7 @@ EventLoopThreadPool::~EventLoopThreadPool()
 {
   // Don't delete loop, it's stack variable
 }
-
+//创建线程池，将线程的执行
 void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 {
   assert(!started_);
@@ -44,8 +44,11 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
   {
     char buf[name_.size() + 32];
     snprintf(buf, sizeof buf, "%s%d", name_.c_str(), i);
+	////新建一个线程 每一个线程都是运行 &EventLoopThread::threadFunc->loop.loop()
+	//其实都是在运行loop函数
     EventLoopThread* t = new EventLoopThread(cb, buf);
-    threads_.push_back(t);
+	threads_.push_back(t);
+	
     loops_.push_back(t->startLoop());
   }
   if (numThreads_ == 0 && cb)

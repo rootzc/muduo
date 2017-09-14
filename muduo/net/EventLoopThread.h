@@ -23,7 +23,7 @@ namespace net
 {
 
 class EventLoop;
-
+//事件处理线程
 class EventLoopThread : boost::noncopyable
 {
  public:
@@ -35,13 +35,18 @@ class EventLoopThread : boost::noncopyable
   EventLoop* startLoop();
 
  private:
+	 //线程函数
   void threadFunc();
 
   EventLoop* loop_;
   bool exiting_;
+  //线程
   Thread thread_;
+  //互斥量
   MutexLock mutex_;
+  //条件变量
   Condition cond_;
+  //线程初始化函数
   ThreadInitCallback callback_;
 };
 

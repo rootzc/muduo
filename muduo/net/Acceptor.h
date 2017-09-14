@@ -44,10 +44,14 @@ class Acceptor : boost::noncopyable
   void listen();
 
  private:
+	 //
   void handleRead();
-
+	
+  //用于epoll监听
   EventLoop* loop_;
+  //监听的套接字
   Socket acceptSocket_;
+  //
   Channel acceptChannel_;
   NewConnectionCallback newConnectionCallback_;
   bool listenning_;

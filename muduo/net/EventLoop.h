@@ -37,6 +37,7 @@ class TimerQueue;
 /// Reactor, at most one per thread.
 ///
 /// This is an interface class, so don't expose too much details.
+//事件处理器
 class EventLoop : boost::noncopyable
 {
  public:
@@ -50,29 +51,35 @@ class EventLoop : boost::noncopyable
   ///
   /// Must be called in the same thread as creation of the object.
   ///
+  //主循环
   void loop();
 
   /// Quits loop.
   ///
   /// This is not 100% thread safe, if you call through a raw pointer,
   /// better to call through shared_ptr<EventLoop> for 100% safety.
+  //退出
   void quit();
 
   ///
   /// Time when poll returns, usually means data arrival.
   ///
+  //数据的到达时间
   Timestamp pollReturnTime() const { return pollReturnTime_; }
 
+  //
   int64_t iteration() const { return iteration_; }
 
   /// Runs callback immediately in the loop thread.
   /// It wakes up the loop, and run the cb.
   /// If in the same loop thread, cb is run within the function.
   /// Safe to call from other threads.
+  //
   void runInLoop(const Functor& cb);
   /// Queues callback in the loop thread.
   /// Runs after finish pooling.
   /// Safe to call from other threads.
+  //
   void queueInLoop(const Functor& cb);
 
   size_t queueSize() const;
@@ -150,25 +157,36 @@ class EventLoop : boost::noncopyable
   typedef std::vector<Channel*> ChannelList;
 
   bool looping_; /* atomic */
+  
   bool quit_; /* atomic and shared between threads, okay on x86, I guess. */
   bool eventHandling_; /* atomic */
   bool callingPendingFunctors_; /* atomic */
   int64_t iteration_;
+  //线程id
   const pid_t threadId_;
+  //时间戳
   Timestamp pollReturnTime_;
+  //epoller
   boost::scoped_ptr<Poller> poller_;
+  //定时器队列
   boost::scoped_ptr<TimerQueue> timerQueue_;
+  //唤醒的fd
   int wakeupFd_;
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
+  ///事件
   boost::scoped_ptr<Channel> wakeupChannel_;
   boost::any context_;
 
   // scratch variables
+  //已触发事件集合
   ChannelList activeChannels_;
+  //当前事件
   Channel* currentActiveChannel_;
-
+	
+  //互斥锁
   mutable MutexLock mutex_;
+  //线程函数
   std::vector<Functor> pendingFunctors_; // @GuardedBy mutex_
 };
 

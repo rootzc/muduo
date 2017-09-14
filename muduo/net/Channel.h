@@ -31,6 +31,7 @@ class EventLoop;
 /// This class doesn't own the file descriptor.
 /// The file descriptor could be a socket,
 /// an eventfd, a timerfd, or a signalfd
+//封装了事件
 class Channel : boost::noncopyable
 {
  public:
@@ -69,7 +70,7 @@ class Channel : boost::noncopyable
   void set_revents(int revt) { revents_ = revt; } // used by pollers
   // int revents() const { return revents_; }
   bool isNoneEvent() const { return events_ == kNoneEvent; }
-
+  //添加事件到epoller
   void enableReading() { events_ |= kReadEvent; update(); }
   void disableReading() { events_ &= ~kReadEvent; update(); }
   void enableWriting() { events_ |= kWriteEvent; update(); }
@@ -100,18 +101,25 @@ class Channel : boost::noncopyable
   static const int kNoneEvent;
   static const int kReadEvent;
   static const int kWriteEvent;
-
+	
+  
   EventLoop* loop_;
+  //事件标志
   const int  fd_;
+  //
   int        events_;
   int        revents_; // it's the received event types of epoll or poll
+  //在事件集合中的索引
   int        index_; // used by Poller.
   bool       logHup_;
 
   boost::weak_ptr<void> tie_;
   bool tied_;
+  //是否已经处理了事件
   bool eventHandling_;
+  //是否已经添加了事件
   bool addedToLoop_;
+  //读写关闭，错误的回调函数
   ReadEventCallback readCallback_;
   EventCallback writeCallback_;
   EventCallback closeCallback_;

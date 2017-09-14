@@ -15,9 +15,12 @@ namespace muduo
 /// This class is immutable.
 /// It's recommended to pass it by value, since it's passed in register on x64.
 ///
+//厉害了，这里用了boost的operators库，运算符重载库，该库是一个空库，实现了大量的友元运算符重载函数，
+//与之相对的要求是子类实现部分运算符重载，其就可以生成其他的运算符重载函数，因为== -> !=
+//要点：模板参数必须是子类
 class Timestamp : public muduo::copyable,
-                  public boost::equality_comparable<Timestamp>,
-                  public boost::less_than_comparable<Timestamp>
+                  public boost::equality_comparable<Timestamp>,//类名就是子类要实现的函数 == ->  != 
+                  public boost::less_than_comparable<Timestamp>//< -> >= 
 {
  public:
   ///
@@ -36,7 +39,7 @@ class Timestamp : public muduo::copyable,
     : microSecondsSinceEpoch_(microSecondsSinceEpochArg)
   {
   }
-
+	//交换值
   void swap(Timestamp& that)
   {
     std::swap(microSecondsSinceEpoch_, that.microSecondsSinceEpoch_);
@@ -46,7 +49,8 @@ class Timestamp : public muduo::copyable,
 
   string toString() const;
   string toFormattedString(bool showMicroseconds = true) const;
-
+	
+  //是否非法，应该是溢出导致
   bool valid() const { return microSecondsSinceEpoch_ > 0; }
 
   // for internal usage.
@@ -57,7 +61,9 @@ class Timestamp : public muduo::copyable,
   ///
   /// Get time of now.
   ///
+  //获取当前时间
   static Timestamp now();
+  //判断时间是不是非法
   static Timestamp invalid()
   {
     return Timestamp();
@@ -76,7 +82,7 @@ class Timestamp : public muduo::copyable,
   static const int kMicroSecondsPerSecond = 1000 * 1000;
 
  private:
-  int64_t microSecondsSinceEpoch_;
+  int64_t microSecondsSinceEpoch_;//时间戳
 };
 
 inline bool operator<(Timestamp lhs, Timestamp rhs)

@@ -14,7 +14,7 @@ namespace FileUtil
 {
 class AppendFile;
 }
-
+//日志文件
 class LogFile : boost::noncopyable
 {
  public:
@@ -26,7 +26,7 @@ class LogFile : boost::noncopyable
   ~LogFile();
 
   void append(const char* logline, int len);
-  void flush();
+  void flush();//刷新
   bool rollFile();
 
  private:
@@ -40,12 +40,12 @@ class LogFile : boost::noncopyable
   const int checkEveryN_;
 
   int count_;
-
+	//互斥锁，多线程下的
   boost::scoped_ptr<MutexLock> mutex_;
   time_t startOfPeriod_;
-  time_t lastRoll_;
-  time_t lastFlush_;
-  boost::scoped_ptr<FileUtil::AppendFile> file_;
+  time_t lastRoll_;//上一次刷新的周期？
+  time_t lastFlush_;//上次刷新
+  boost::scoped_ptr<FileUtil::AppendFile> file_;//日志文件
 
   const static int kRollPerSeconds_ = 60*60*24;
 };
